@@ -1,0 +1,63 @@
+name: Structural Environment Intelligence Probe
+
+on:
+  workflow_dispatch:
+
+jobs:
+  structural-probe:
+    runs-on: windows-latest
+    steps:
+      - name: Extracting Deep Structural Intelligence
+        shell: powershell
+        run: |
+          $Host.UI.RawUI.BufferSize = New-Object Management.Automation.Host.Size(120, 60)
+          
+          Write-Host "=====================================================================" -ForegroundColor Cyan
+          Write-Host "       STRUCTURAL RUNNER INTELLIGENCE & ARCHITECTURE PROBE           " -ForegroundColor Yellow
+          Write-Host "=====================================================================" -ForegroundColor Cyan
+
+          # 1. تفاصيل المعمارية ونظام التشغيل
+          Write-Host "[+] [OS & Architecture Metadata]" -ForegroundColor Green
+          $os = Get-CimInstance Win32_OperatingSystem
+          $cs = Get-CimInstance Win32_ComputerSystem
+          Write-Host "    * OS Version      : $($os.Caption) ($($os.Version))"
+          Write-Host "    * Architecture    : $($cs.SystemType)"
+          Write-Host "    * Domain / Host   : $($env:COMPUTERNAME)"
+          Write-Host "    * Current User    : $($env:USERNAME)"
+
+          # 2. فحص صلاحيات التنفيذ والـ Administrator Privileges
+          Write-Host "`n[+] [Privilege & Security Context]" -ForegroundColor Green
+          $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+          Write-Host "    * Elevated Admin  : $isAdmin" -ForegroundColor $(if($isAdmin){"Magenta"}else{"Red"})
+
+          # 3. خريطة المسارات الحرجة والبيئة الحية
+          Write-Host "`n[+] [Environment Paths & Workspace]" -ForegroundColor Green
+          Write-Host "    * Workspace Dir   : $($env:GITHUB_WORKSPACE)"
+          Write-Host "    * Temp Directory  : $($env:TEMP)"
+          Write-Host "    * Path Variables  : $($env:PATH -split ';' | Measure-Object | Select-Object -ExpandProperty Count) paths loaded"
+
+          # 4. فحص الشبكة والمنافذ المتاحة محلياً
+          Write-Host "`n[+] [Active Local Ports & Network Bindings]" -ForegroundColor Green
+          try {
+              $listeningPorts = Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | Select-Object LocalPort, OwningProcess | Select-Object -First 10
+              foreach ($p in $listeningPorts) {
+                  $proc = Get-Process -Id $p.OwningProcess -ErrorAction SilentlyContinue
+                  Write-Host "    * Port $($p.LocalPort) -> Bound to process: $($proc.Name) (PID: $($p.OwningProcess))"
+              }
+          } catch {
+              Write-Host "    * Port scanning restricted." -ForegroundColor DarkYellow
+          }
+
+          # 5. كشف الخدمات الأساسية لـ Windows (التأكد من الخدمات المعطلة أو النشطة)
+          Write-Host "`n[+] [Key System Services Status]" -ForegroundColor Green
+          $targetServices = @('DiagTrack', 'SysMain', 'WSearch', 'wuauserv', 'TermService')
+          foreach ($svcName in $targetServices) {
+              $svc = Get-Service -Name $svcName -ErrorAction SilentlyContinue
+              if ($svc) {
+                  Write-Host "    * Service '$($svcName)' Status: $($svc.Status)" -ForegroundColor $(if($svc.Status -eq 'Running'){"Yellow"}else{"DarkGray"})
+              }
+          }
+
+          Write-Host "=====================================================================" -ForegroundColor Cyan
+          Write-Host "       INTELLIGENCE PROBE COMPLETED. READY FOR ARCHITECTURE.         " -ForegroundColor Cyan
+          Write-Host "=====================================================================" -ForegroundColor Cyan
